@@ -282,12 +282,10 @@ class ManualChannel:
 
 
 def _make_llm(case: Case):
-    try:
-        return LLMClient()
-    except LLMError as exc:
-        if case.context.get("_counterparty_mode", "llm") == "llm":
-            raise exc
+    mode = case.context.get("_counterparty_mode", "llm")
+    if mode == "scripted":
         return _OfflineLLM()
+    return LLMClient()
 
 
 class _OfflineLLM:
@@ -426,7 +424,6 @@ def _default_script(case: Case):
     target = case.policy.target_amount or case.policy.min_acceptable_amount
     return [
         "Thanks for contacting us. Could you provide the order number and proof of damage?",
-        "We can offer store credit for %s %s." % (target * 0.5, case.policy.currency),
         "After review, we can issue a full refund of %s %s to the original payment method." % (
             target,
             case.policy.currency,
