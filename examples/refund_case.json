@@ -1,0 +1,25 @@
+{
+  "goal": "Get a full refund for order #4821 (a ceramic dinner set, ₹3,200) — it arrived cracked in three places. I do not want a replacement or store credit; I want my money back to the original payment method.",
+  "context": {
+    "order_id": "#4821",
+    "item": "Ceramic dinner set (16 pieces)",
+    "order_amount": 3200,
+    "account_email": "buyer@example.com",
+    "delivered_on": "2026-05-28"
+  },
+  "evidence": [
+    "photo_cracked_plate_1.jpg",
+    "photo_cracked_plate_2.jpg",
+    "unboxing_video.mp4",
+    "order_invoice.pdf"
+  ],
+  "policy": {
+    "currency": "INR",
+    "min_acceptable_amount": 3200,
+    "target_amount": 3200,
+    "forbidden_outcomes": ["store_credit"],
+    "ask_below_threshold": true,
+    "escalation_budget": 2,
+    "notes": "Customer paid by card and wants the refund to the original payment method. A replacement is acceptable to discuss ONLY if the user approves it; default is cash refund."
+  }
+}

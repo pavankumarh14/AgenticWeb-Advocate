@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+advocate.db
+*.db
+*.db-wal
+*.db-shm
+.env

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ResolveMate — Resolution Dashboard</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#171d26; --panel2:#1f2733; --line:#2a3340;
+    --txt:#e6edf3; --muted:#8b98a8; --accent:#4d8bff; --accent2:#3ad29f;
+    --warn:#ffb454; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--txt)}
+  header{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;
+         align-items:center;gap:12px;background:var(--panel)}
+  header h1{font-size:17px;margin:0;font-weight:650}
+  header .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);
+              padding:2px 8px;border-radius:20px}
+  .layout{display:grid;grid-template-columns:280px 1fr 360px;height:calc(100vh - 53px)}
+  .col{overflow-y:auto;padding:16px}
+  .col.left{border-right:1px solid var(--line)}
+  .col.right{border-left:1px solid var(--line);background:var(--panel)}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+     margin:0 0 10px}
+  .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .section-head h2{margin:0}
+  /* case list */
+  .case{padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;
+        cursor:pointer;background:var(--panel)}
+  .case:hover{border-color:var(--accent)}
+  .case.active{border-color:var(--accent);background:var(--panel2)}
+  .case .goal{font-size:12.5px;color:var(--txt);display:-webkit-box;-webkit-line-clamp:2;
+              -webkit-box-orient:vertical;overflow:hidden}
+  .badge{display:inline-block;font-size:10.5px;padding:2px 7px;border-radius:20px;
+         margin-bottom:6px;font-weight:600}
+  .b-new,.b-planned,.b-open,.b-waiting{background:#1d2b40;color:var(--accent)}
+  .b-needs_approval{background:#3a2e16;color:var(--warn)}
+  .b-resolved{background:#143027;color:var(--accent2)}
+  .b-denied,.b-abandoned{background:#3a1d1d;color:var(--bad)}
+  /* timeline */
+  .msg{max-width:78%;margin:10px 0;padding:10px 13px;border-radius:12px;
+       white-space:pre-wrap;font-size:13.5px}
+  .m-agent{margin-left:auto;background:#163a6b;border:1px solid #1f4d8f;border-bottom-right-radius:3px}
+  .m-counterparty{margin-right:auto;background:var(--panel2);border:1px solid var(--line);
+                  border-bottom-left-radius:3px}
+  .m-system{margin:10px auto;background:transparent;border:1px dashed var(--line);
+            color:var(--muted);font-size:12px;text-align:center;max-width:90%}
+  .who{font-size:10.5px;color:var(--muted);margin-bottom:3px;display:flex;gap:8px;align-items:center}
+  .mtype{font-size:10px;border:1px solid var(--line);border-radius:10px;padding:0 6px;color:var(--accent)}
+  .mtype.dark{color:var(--warn);border-color:var(--warn)}
+  .outcome{margin:14px 0;padding:12px;border-radius:10px;text-align:center;font-weight:600}
+  .outcome.ok{background:#143027;color:var(--accent2);border:1px solid #1d5a44}
+  .outcome.bad{background:#3a1d1d;color:var(--bad);border:1px solid #5a2424}
+  .approve-bar{margin:14px 0;padding:14px;border:1px solid var(--warn);border-radius:10px;
+               background:#241c0e}
+  .approve-bar p{margin:0 0 10px;color:var(--warn)}
+  .manual-bar{margin:14px 0;padding:14px;border:1px solid var(--line);border-radius:10px;
+              background:var(--panel)}
+  .manual-bar p{margin:0 0 10px;color:var(--muted)}
+  /* form */
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  input,textarea,select{width:100%;background:var(--bg);border:1px solid var(--line);
+        color:var(--txt);border-radius:7px;padding:8px;font:inherit}
+  textarea{resize:vertical;min-height:70px}
+  .row{display:flex;gap:8px}.row>*{flex:1}
+  .chk{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .chk input{width:auto}
+  button{cursor:pointer;border:none;border-radius:8px;padding:9px 14px;font:inherit;
+         font-weight:600;color:#fff}
+  .btn-primary{background:var(--accent);width:100%;margin-top:14px;padding:11px}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line);
+             padding:4px 8px;font-size:11.5px}
+  .btn-ghost:hover{color:var(--txt);border-color:var(--bad)}
+  .btn-ok{background:var(--accent2);color:#06120d}
+  .btn-bad{background:var(--bad)}
+  .btn-row{display:flex;gap:8px}.btn-row button{flex:1}
+  .ex{font-size:11.5px;color:var(--accent);cursor:pointer;text-decoration:underline;margin-left:8px}
+  .empty{color:var(--muted);text-align:center;margin-top:40px;font-size:13px}
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);
+        border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite;
+        vertical-align:-1px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚖️ ResolveMate</h1>
+  <span class="tag">Autonomous Web Resolution Agent — prototype</span>
+  <span id="live" class="tag" style="margin-left:auto"></span>
+</header>
+
+<div class="layout">
+  <!-- LEFT: case list -->
+  <div class="col left">
+    <div class="section-head">
+      <h2>Cases</h2>
+      <button class="btn-ghost" onclick="clearCases()">Clear</button>
+    </div>
+    <div id="caseList"></div>
+  </div>
+
+  <!-- CENTER: timeline -->
+  <div class="col" id="timeline">
+    <div class="empty">Select a case, or create one on the right →</div>
+  </div>
+
+  <!-- RIGHT: new-case form -->
+  <div class="col right">
+    <h2>New Case <span class="ex" onclick="loadExample('refund')">refund example</span>
+        <span class="ex" onclick="loadExample('cancel')">cancel example</span></h2>
+
+    <label>What do you want resolved?</label>
+    <textarea id="goal" placeholder="e.g. Get a full refund for order #4821; it arrived broken."></textarea>
+
+    <div class="row">
+      <div><label>Order, booking, or account ID</label><input id="order_id" placeholder="#4821"></div>
+      <div><label>Account email</label><input id="account_email" placeholder="you@example.com"></div>
+    </div>
+
+    <label>Proof or evidence</label>
+    <input id="evidence" placeholder="photo1.jpg, invoice.pdf">
+
+    <h2 style="margin-top:20px">Agent Instructions</h2>
+    <div class="row">
+      <div><label>Currency</label><input id="currency" value="INR"></div>
+      <div><label>Lowest acceptable refund</label><input id="min_acceptable_amount" type="number" value="3200"></div>
+      <div><label>Requested refund</label><input id="target_amount" type="number" value="3200"></div>
+    </div>
+    <label>How many times should the agent push?</label>
+    <input id="escalation_budget" type="number" value="2">
+    <div class="chk"><input type="checkbox" id="forbid_credit" checked>
+      <span>Do not accept store credit</span></div>
+    <div class="chk"><input type="checkbox" id="ask_below" checked>
+      <span>Ask before accepting a lower offer</span></div>
+
+    <label>Demo support channel</label>
+    <select id="counterparty">
+      <option value="scripted">Scripted (offline demo)</option>
+      <option value="manual">Manual support (type replies)</option>
+      <option value="llm">LLM role-play (requires API key)</option>
+    </select>
+
+    <button class="btn-primary" id="startBtn" onclick="startCase()">Start Case</button>
+  </div>
+</div>
+
+<script>
+let selected = null;
+let pollTimer = null;
+let manualReplyDraft = '';
+
+async function api(method, path, body){
+  const opt = {method, headers:{'Content-Type':'application/json'}};
+  if(body) opt.body = JSON.stringify(body);
+  const r = await fetch(path, opt);
+  return r.json();
+}
+
+function badge(status){ return `<span class="badge b-${status}">${status.replace(/_/g,' ')}</span>`; }
+
+async function refreshList(){
+  const cases = await api('GET','/api/cases');
+  const el = document.getElementById('caseList');
+  if(!cases.length){ el.innerHTML = '<div class="empty">No cases yet.</div>'; return; }
+  el.innerHTML = cases.map(c => `
+    <div class="case ${c.case_id===selected?'active':''}" onclick="select('${c.case_id}')">
+      ${badge(c.status)}
+      <div class="goal">${escapeHtml(c.goal)}</div>
+    </div>`).join('');
+}
+
+function select(id){ selected = id; renderCase(); refreshList(); }
+
+async function renderCase(){
+  if(!selected) return;
+  const c = await api('GET','/api/cases/'+selected);
+  const tl = document.getElementById('timeline');
+  const lastSystem = [...(c.transcript || [])].reverse().find(m => m.role === 'system');
+  const paused = lastSystem && /agent paused|quota|api key|error/i.test(lastSystem.text || '');
+  const running = ['new','planned','open'].includes(c.status) && !paused;
+  const parked = c.status === 'waiting' && !paused;
+  document.getElementById('live').innerHTML = running
+    ? '<span class="spin"></span> agent working…'
+    : parked ? 'waiting for reply' : '';
+
+  let html = `<h2>Case ${c.case_id} — ${badge(c.status)}</h2>`;
+  html += `<div style="color:var(--muted);margin-bottom:6px">${escapeHtml(c.goal)}</div>`;
+
+  for(const m of c.transcript){
+    if(m.role==='system'){
+      html += `<div class="msg m-system">${escapeHtml(m.text)}</div>`;
+    } else {
+      const who = m.role==='agent' ? 'RESOLVEMATE' : 'SUPPORT';
+      let type = '';
+      if(m.msg_type && m.msg_type !== 'unknown'){
+        const dark = m.meta && m.meta.is_dark_pattern;
+        type = `<span class="mtype ${dark?'dark':''}">${m.msg_type}${dark?' • dark-pattern':''}</span>`;
+      }
+      html += `<div class="msg m-${m.role}">
+                 <div class="who">${who} ${type}</div>${escapeHtml(m.text)}</div>`;
+    }
+  }
+
+  if(c.status==='needs_approval'){
+    html += `<div class="approve-bar">
+      <p>⏸️ The agent needs your decision (it hit a guardrail or a below-threshold offer).</p>
+      <div class="btn-row">
+        <button class="btn-ok" onclick="approve(true)">Approve / Accept</button>
+        <button class="btn-bad" onclick="approve(false)">Reject / Push back</button>
+      </div></div>`;
+  }
+  if(c.context && c.context._counterparty_mode==='manual' && !['resolved','denied','abandoned','needs_approval'].includes(c.status)){
+    html += `<div class="manual-bar">
+      <p>Type the support representative's next reply.</p>
+      <textarea id="manualReply" oninput="manualReplyDraft=this.value" placeholder="e.g. We can offer store credit, but not a cash refund.">${escapeHtml(manualReplyDraft)}</textarea>
+      <button class="btn-primary" onclick="sendManualReply()">Send Support Reply</button>
+    </div>`;
+  }
+  if(c.status==='resolved'){
+    html += `<div class="outcome ok">✅ RESOLVED — recovered ${c.outcome_amount} ${c.policy.currency} (${c.outcome_kind})</div>`;
+  }
+  if(c.status==='denied'){ html += `<div class="outcome bad">⛔ Documented final denial</div>`; }
+  if(c.status==='abandoned'){ html += `<div class="outcome bad">⚠️ Abandoned (escalation budget exhausted)</div>`; }
+
+  tl.innerHTML = html;
+}
+
+async function approve(ok){
+  const note = ok ? '' : prompt('Optional note for pushing back:', 'Reject this offer; push for the full amount') || '';
+  const counterparty = document.getElementById('counterparty').value;
+  await api('POST', `/api/cases/${selected}/approve`, {approved:ok, note, counterparty});
+  renderCase();
+}
+
+async function sendManualReply(){
+  const box = document.getElementById('manualReply');
+  const text = box ? box.value.trim() : '';
+  if(!text){ alert('Please enter the support reply.'); return; }
+  await api('POST', `/api/cases/${selected}/reply`, {text});
+  manualReplyDraft = '';
+  renderCase();
+}
+
+async function clearCases(){
+  if(!confirm('Clear all saved demo cases?')) return;
+  await api('DELETE','/api/cases');
+  selected = null;
+  await refreshList();
+  document.getElementById('timeline').innerHTML =
+    '<div class="empty">Select a case, or create one on the right →</div>';
+  document.getElementById('live').innerHTML = '';
+}
+
+async function startCase(){
+  const btn = document.getElementById('startBtn');
+  const spec = {
+    goal: val('goal'),
+    context: { order_id: val('order_id'), account_email: val('account_email') },
+    evidence: val('evidence').split(',').map(s=>s.trim()).filter(Boolean),
+    counterparty: document.getElementById('counterparty').value,
+    policy: {
+      currency: val('currency'),
+      min_acceptable_amount: num('min_acceptable_amount'),
+      target_amount: num('target_amount'),
+      escalation_budget: num('escalation_budget'),
+      forbidden_outcomes: document.getElementById('forbid_credit').checked ? ['store_credit'] : [],
+      ask_below_threshold: document.getElementById('ask_below').checked,
+    }
+  };
+  if(!spec.goal){ alert('Please enter a goal.'); return; }
+  btn.disabled = true; btn.textContent = 'Starting…';
+  const res = await api('POST','/api/cases', spec);
+  btn.disabled = false; btn.textContent = 'Start Case';
+  selected = res.case_id;
+  refreshList(); renderCase();
+}
+
+function loadExample(kind){
+  if(kind==='refund'){
+    setv('goal','Get a full refund for order #4821 (a ceramic dinner set, ₹3,200) — it arrived cracked in three places. I want my money back, not a replacement or store credit.');
+    setv('order_id','#4821'); setv('account_email','buyer@example.com');
+    setv('evidence','photo_cracked_1.jpg, unboxing_video.mp4, invoice.pdf');
+    setv('min_acceptable_amount',3200); setv('target_amount',3200); setv('escalation_budget',2);
+    document.getElementById('forbid_credit').checked = true;
+    document.getElementById('ask_below').checked = true;
+  } else {
+    setv('goal',"Cancel my 'ProStream' subscription effective immediately and confirm no further charges. Don't let them talk me into a retention discount.");
+    setv('order_id','ProStream Annual'); setv('account_email','streamfan@example.com');
+    setv('evidence','latest_invoice.pdf');
+    setv('min_acceptable_amount',0); setv('target_amount',0); setv('escalation_budget',3);
+    document.getElementById('forbid_credit').checked = true;
+    document.getElementById('ask_below').checked = false;
+  }
+}
+
+// helpers
+const val = id => document.getElementById(id).value.trim();
+const num = id => parseFloat(document.getElementById(id).value || '0') || 0;
+const setv = (id,v) => document.getElementById(id).value = v;
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+// poll loop
+function tick(){
+  refreshList();
+  if(selected && document.activeElement && document.activeElement.id === 'manualReply') return;
+  if(selected) renderCase();
+}
+setInterval(tick, 1500);
+tick();
+</script>
+</body>
+</html>

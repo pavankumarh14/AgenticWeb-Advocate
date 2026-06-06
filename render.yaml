@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: resolvemate
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 server.py
+    healthCheckPath: /
+    envVars:
+      - key: ADVOCATE_DB
+        value: advocate.db
+      - key: ADVOCATE_LLM_PROVIDER
+        value: gemini
+      - key: ADVOCATE_LLM_MODEL
+        value: gemini-2.5-flash-lite
+      - key: ADVOCATE_LLM_API_KEY
+        sync: false

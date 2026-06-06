@@ -1,0 +1,21 @@
+{
+  "goal": "Cancel my 'ProStream' subscription (account streamfan@example.com) effective immediately and confirm no further charges. Do not let them talk me into a discount to stay.",
+  "context": {
+    "account_email": "streamfan@example.com",
+    "plan": "ProStream Annual",
+    "renewal_date": "2026-07-15",
+    "monthly_charge": 499
+  },
+  "evidence": [
+    "latest_invoice.pdf"
+  ],
+  "policy": {
+    "currency": "INR",
+    "min_acceptable_amount": 0,
+    "target_amount": 0,
+    "forbidden_outcomes": ["store_credit"],
+    "ask_below_threshold": false,
+    "escalation_budget": 3,
+    "notes": "Goal is cancellation, not money. Treat any 'stay for a discount' retention offer as a deflection/dark-pattern and escalate. Resolved = written confirmation the subscription is cancelled with no further charges."
+  }
+}
